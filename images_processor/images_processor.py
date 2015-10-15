@@ -7,12 +7,27 @@ import image_analyses as ian
 
 
 def get_dataset_tags_sacla(main_dataset):
+    """
+    Returns an HDF5 dataset pointer and a list of tags for SACLA data files
+    
+    Parameters
+    ----------
+    main_dataset: HDF5 dataset
+        the dataset containing the required SACLA dataset, e.g. /run_XXXXX/detector_2d_1
+           
+    Returns
+    ----------
+    main_dataset : HDF5 dataset
+    tags_list: numpy array
+        a numpy array containing the list of tags contained in the dataset
+       
+    """
     try:
         tags_list = main_dataset.parent["event_info/tag_number_list"].value.tolist()
     except:
         print sys.exc_info()
         print "[ERROR] Cannot load tags list from SACLA file"
-        return 
+        return None, []
     return main_dataset, np.array(tags_list)
 
 
@@ -45,7 +60,7 @@ def images_iterator(images, chunk_size=1, mask=None, n_events=-1):
         print "Processing event %d / %d" % (i, n_events)
         end_i = min(i + chunk_size, n_events)
         if mask is not None:
-            idx = np.arange(n_events)[mask]
+            #idx = np.arange(n_events)[mask]
             dset = images[i:end_i][mask[i:end_i]]
         else:
             dset = images[i:end_i]
@@ -66,10 +81,6 @@ def images_iterator_sacla(dataset, chunk_size=1, mask=None, n_events=-1, tags_li
         n_events = len(tags_list)
         
     for tag in tags_list[0:n_events]:
-        #if tags is not None:                
-        #    if tag not in tags:
-        #        continue
-        # suboptimal
         try:
             image = dataset["tag_" + str(tag) + "/detector_data"][:]
             yield image
