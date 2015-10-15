@@ -1,6 +1,22 @@
+import matplotlib as mpl
+import numpy as np
+from sys import exc_info
+import os 
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
-import numpy as np
+
+module_dir = os.path.dirname(__file__)
+
+def load_matplotlib_style(name="default"):
+    # loading customized matplotlib style. If not available, it does nothing
+    try:
+        if name == "default":
+            mpl.rcParams = mpl.rc_params_from_file(module_dir + "/matplotlibrc")
+        reload(plt)
+        #reload(gridspec)
+    except:
+        print exc_info()
+        pass
 
 
 def plot_image_and_proj(image, title="", **kwargs):
