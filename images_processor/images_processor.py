@@ -6,7 +6,17 @@ import pydoc
 import image_analyses as ian
 
 
-def get_dataset_tags(main_dataset):
+def get_dataset_tags_sacla(main_dataset):
+    try:
+        tags_list = main_dataset.parent["event_info/tag_number_list"].value.tolist()
+    except:
+        print sys.exc_info()
+        print "[ERROR] Cannot load tags list from SACLA file"
+        return 
+    return main_dataset, np.array(tags_list)
+
+
+def get_dataset_tags_lcls(main_dataset):
     try:
         if "image" in main_dataset.keys():
             dataset = main_dataset["image"]
@@ -18,31 +28,6 @@ def get_dataset_tags(main_dataset):
         tags_list = 1e6 * main_dataset.parent["time"]["seconds"].astype(long) + main_dataset.parent["time"]["fiducials"]
         
     return dataset, tags_list
-
-class Analysis(object):
-    """Simple container for the analysis functions to be loaded into AnalysisProcessor. At the moment, it is only used internally inside AnalysisProcessor
-    """
-    def __init__(self, analysis_function, arguments={}, post_analysis_function=None, name=None):
-        """
-        Parameters
-        ----------
-        analysis_function: callable function
-            the main analysis function to be run on images
-        arguments: dict
-            arguments to analysis_function
-        post_analysis_function: callable function
-            function to be called only once after the analysis loop
-        """
-
-        self.function = analysis_function
-        self.post_analysis_function = post_analysis_function
-        self.arguments = arguments
-        if name is not None:
-            self.name = name
-        else:
-            self.name = self.function.__name__
-        self.temp_arguments = {}
-        self.results = {}
 
 
 def images_iterator(images, chunk_size=1, mask=None, n_events=-1):
@@ -70,6 +55,28 @@ def images_iterator(images, chunk_size=1, mask=None, n_events=-1):
 
         for j in range(dset.shape[0]):
             yield dset[j]
+
+
+def images_iterator_sacla(dataset, chunk_size=1, mask=None, n_events=-1, tags_list=None):
+    """SACLA iterator
+    ADD BLAH
+    """
+    
+    if n_events == -1:
+        n_events = len(tags_list)
+        
+    for tag in tags_list[0:n_events]:
+        #if tags is not None:                
+        #    if tag not in tags:
+        #        continue
+        # suboptimal
+        try:
+            image = dataset["tag_" + str(tag) + "/detector_data"][:]
+            yield image
+        except:
+            print sys.exc_info()
+            #yield None
+            pass
 
 
 def images_iterator_cspad140(images, chunk_size=1, mask=None, n_events=-1):
@@ -105,6 +112,32 @@ def images_iterator_cspad140(images, chunk_size=1, mask=None, n_events=-1):
                                      vertical_gap_px_arr, dset.T[1].T.swapaxes(1, 2)), axis=2)            
         for j in range(dset.shape[0]): 
             yield dset_glued[j]
+    
+    
+class Analysis(object):
+    """Simple container for the analysis functions to be loaded into AnalysisProcessor. At the moment, it is only used internally inside AnalysisProcessor
+    """
+    def __init__(self, analysis_function, arguments={}, post_analysis_function=None, name=None):
+        """
+        Parameters
+        ----------
+        analysis_function: callable function
+            the main analysis function to be run on images
+        arguments: dict
+            arguments to analysis_function
+        post_analysis_function: callable function
+            function to be called only once after the analysis loop
+        """
+
+        self.function = analysis_function
+        self.post_analysis_function = post_analysis_function
+        self.arguments = arguments
+        if name is not None:
+            self.name = name
+        else:
+            self.name = self.function.__name__
+        self.temp_arguments = {}
+        self.results = {}
 
 
 class ImagesProcessor(object):
@@ -150,7 +183,9 @@ class ImagesProcessor(object):
 
     """
 
-    def __init__(self):
+    def __init__(self, facility="LCLS", debug=False):
+        self.facility = facility
+        self.debug = debug
         self.results = []
         self.temp = {}
         self.functions = {}
@@ -171,7 +206,15 @@ class ImagesProcessor(object):
         self.flatten_results = False
         self.preprocess_list = []
         self.dataset_name = None
-        self.images_iterator = images_iterator 
+        if self.facility == "SACLA":
+            self.images_iterator = images_iterator_sacla
+            self.get_dataset_tags = get_dataset_tags_sacla
+        elif self.facility == "LCLS":
+            self.images_iterator = images_iterator
+            self.get_dataset_tags = get_datasets_tags_lcls
+        else:
+            print "[ERROR] Supported facilities are LCLS and SACLA"
+            return -1
 
     def __call__(self, dataset_file, n=-1, tags=None):
         return self.analyze_images(dataset_file, n=n, tags=tags)
@@ -345,14 +388,15 @@ class ImagesProcessor(object):
             hf.close()
             raise RuntimeError("Please provide a dataset name using the `set_sacla_dataset` method!")
 
+        # for SACLA this should contain also the Run
         main_dataset = hf[self.dataset_name]
-        dataset, tags_list = get_dataset_tags(main_dataset)
-
+        dataset, tags_list = self.get_dataset_tags(main_dataset)
+        
         if n != -1:
             tags_list = tags_list[:n]
         
         tags_mask = None
-        dataset_indexes = np.arange(dataset.shape[0])
+        #dataset_indexes = np.arange(dataset.shape[0])
         if tags is not None:
             tags_mask = np.in1d(tags_list, tags, assume_unique=True)
             tags_list = tags_list[tags_mask]
@@ -369,11 +413,13 @@ class ImagesProcessor(object):
             analysis.temp_arguments["image_dtype"] = None
 
         # loop on tags
-        images_iter = self.images_iterator(dataset, chunk_size, tags_mask, n_events=n)
+        images_iter = self.images_iterator(dataset, chunk_size, tags_mask, n_events=n, tags_list=tags_list)
         
         for image_i, image in enumerate(images_iter):
             if image_i >= n_images:
                 break
+            
+            # check
             
             if self.f_for_all_images != {}:
                 for k in self.preprocess_list:
