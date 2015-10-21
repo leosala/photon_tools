@@ -222,7 +222,7 @@ class ImagesProcessor(object):
             self.get_dataset_tags = get_dataset_tags_sacla
         elif self.facility == "LCLS":
             self.images_iterator = images_iterator
-            self.get_dataset_tags = get_datasets_tags_lcls
+            self.get_dataset_tags = get_dataset_tags_lcls
         else:
             print "[ERROR] Supported facilities are LCLS and SACLA"
             return -1

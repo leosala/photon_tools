@@ -59,7 +59,7 @@ patch.antialiased      : True    # render patches in antialised (no jaggies)
 # The font.size property is the default font size for text, given in pts.
 # 12pt is the standard value.
 #
-font.family          : Arial
+#font.family          : Arial
 #font.style          : normal
 #font.variant        : normal
 #font.weight         : medium
@@ -224,19 +224,19 @@ legend.numpoints     : 1      # the number of points in the legend line
 
 ### FIGURE
 # See http://matplotlib.sourceforge.net/api/figure_api.html#matplotlib.figure.Figure
-figure.figsize   : 11, 8    # figure size in inches
+#figure.figsize   : 8, 8    # figure size in inches
 #figure.dpi       : 80      # figure dots per inch
-figure.facecolor : 1.0    # figure facecolor; 0.75 is scalar gray
-figure.edgecolor : 0.50   # figure edgecolor
+#figure.facecolor : 1.0    # figure facecolor; 0.75 is scalar gray
+#figure.edgecolor : 0.50   # figure edgecolor
 
 # The figure subplot parameters.  All dimensions are fraction of the
 # figure width or height
-figure.subplot.left    : 0.1  # the left side of the subplots of the figure
-figure.subplot.right   : 0.92    # the right side of the subplots of the figure
-figure.subplot.bottom  : 0.1    # the bottom of the subplots of the figure
-figure.subplot.top     : 0.95    # the top of the subplots of the figure
+#figure.subplot.left    : 0.1  # the left side of the subplots of the figure
+#figure.subplot.right   : 0.92    # the right side of the subplots of the figure
+#figure.subplot.bottom  : 0.1    # the bottom of the subplots of the figure
+#figure.subplot.top     : 0.95    # the top of the subplots of the figure
 #figure.subplot.wspace  : 0.2    # the amount of width reserved for blank space between subplots
-figure.subplot.hspace  : 0.5    # the amount of height reserved for white space between subplots
+#figure.subplot.hspace  : 0.5    # the amount of height reserved for white space between subplots
 
 ### IMAGES
 #image.aspect : equal             # equal | auto | a number

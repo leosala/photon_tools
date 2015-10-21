@@ -1,4 +1,5 @@
 import h5py
+import sys
 
 
 class Struct:
@@ -70,8 +71,8 @@ def search_hdf5(hdf5_group, regexp, print_elems=0, print_datasets=True):
 
     Parameters
     ----------
-        hdf5_group : h5py.Group
-            HDF5 Group were to perform the search, recursively
+        hdf5_group : h5py.Group or string
+            HDF5 Group were to perform the search, recursively. If string, an HD5F file is opened, and the root group is chosed
         regexp : string
             string to be searched within the HDF5 tree
         print_elems : int
@@ -83,6 +84,12 @@ def search_hdf5(hdf5_group, regexp, print_elems=0, print_datasets=True):
             dictionary with the results, as d[dataset_name] = {'shape': dataset.shape, 'dtype': dataset.type}. 
             In case print_elems != 0, None is returned.
     """
+    
+    if isinstance(hdf5_group, str):
+        try:
+            hdf5_group = h5py.File(hdf5_group, 'r')["/"]
+        except:
+            print "[ERROR] File %s does not exist" % hdf5_group
     import re
 
     regexp = ".*" + regexp + ".*"
@@ -127,6 +134,11 @@ def print_leaf(f, leaf_name="/", level=0, init_level=0):
     :param level: Recursiveness level
     :param init_level:
     """
+    if isinstance(f, str):
+        try:
+            f = h5py.File(f, 'r')
+        except:
+            print "[ERROR] File %s does not exist" % f
 
     try:
         new_leafs = f[leaf_name].keys()
@@ -136,11 +148,14 @@ def print_leaf(f, leaf_name="/", level=0, init_level=0):
                 print_leaf(f, leaf_name + "/" + k, level, init_level)
             else:
                 print (leaf_name + "/" + k).replace("//", "/")
+    except RuntimeError:
+        print "[FATAL ERROR] ", sys.exc_info()[1]
+        sys.exit(-1)        
     except:
         try:
             if f[leaf_name].shape[0] > 10:
-                print leaf_name, f[leaf_name].shape
+                print leaf_name.replace("//", "/"), f[leaf_name].shape
             else:
-                print leaf_name, f[leaf_name].value
+                print leaf_name.replace("//", "/"), f[leaf_name].value
         except:
-                print leaf_name, f[leaf_name].value
+                print leaf_name.replace("//", "/"), f[leaf_name].value
