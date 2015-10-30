@@ -45,7 +45,7 @@ def get_dataset_tags_lcls(main_dataset):
     return dataset, tags_list
 
 
-def images_iterator(images, chunk_size=1, mask=None, n_events=-1):
+def images_iterator(images, chunk_size=1, mask=None, n_events=-1, tags_list=None):
     """Standard Iterator
     ADD BLAH
     """
@@ -90,7 +90,7 @@ def images_iterator_sacla(dataset, chunk_size=1, mask=None, n_events=-1, tags_li
             pass
 
 
-def images_iterator_cspad140(images, chunk_size=1, mask=None, n_events=-1):
+def images_iterator_cspad140(images, chunk_size=1, mask=None, n_events=-1, tags_list=None):
     """Iterator over CSPAD140 images, as taken at LCLS.    
     ADD BLAH
     """
