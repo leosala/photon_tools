@@ -32,6 +32,21 @@ def get_dataset_tags_sacla(main_dataset):
 
 
 def get_dataset_tags_lcls(main_dataset):
+    """
+    Returns an HDF5 dataset pointer and a list of tags for LCLS data files
+    
+    Parameters
+    ----------
+    main_dataset: HDF5 dataset
+        the dataset containing the required LCLS dataset
+           
+    Returns
+    ----------
+    main_dataset : HDF5 dataset
+    tags_list: numpy array
+        a numpy array containing the list of tags contained in the dataset
+       
+    """
     try:
         if "image" in main_dataset.keys():
             dataset = main_dataset["image"]
@@ -46,8 +61,26 @@ def get_dataset_tags_lcls(main_dataset):
 
 
 def images_iterator(images, chunk_size=1, mask=None, n_events=-1, tags_list=None):
-    """Standard Iterator
-    ADD BLAH
+    """
+    Python generator to perform an optimized loop on HDF5 datasets. It reads the dataset chunk-wise, optimizing IO
+    
+    Parameters
+    ----------
+    images: Numpy-like iterable
+        the array containing the images
+    chunk_size: int
+        size of chunks to be read from the file
+    mask: bool array
+        bool array on indices to be read
+    n_events: int
+        number of events to be read overall
+    tags_list: array
+        unused
+           
+    Returns
+    ----------
+    It yields an element of the images array
+    
     """
     i = 0
     if n_events == -1:
@@ -73,8 +106,26 @@ def images_iterator(images, chunk_size=1, mask=None, n_events=-1, tags_list=None
 
 
 def images_iterator_sacla(dataset, chunk_size=1, mask=None, n_events=-1, tags_list=None):
-    """SACLA iterator
-    ADD BLAH
+    """
+    Python generator to perform an optimized loop on HDF5 datasets. This is a specialized version for SACLA datafiles.
+    
+    Parameters
+    ----------
+    images: Numpy-like iterable
+        the array containing the images
+    chunk_size: int
+        unused
+    mask: bool array
+        unused
+    n_events: int
+        number of events to be read overall
+    tags_list: array
+        list of tags to be read
+           
+    Returns
+    ----------
+    It yields an element of the images array
+    
     """
     
     if n_events == -1:
@@ -91,8 +142,27 @@ def images_iterator_sacla(dataset, chunk_size=1, mask=None, n_events=-1, tags_li
 
 
 def images_iterator_cspad140(images, chunk_size=1, mask=None, n_events=-1, tags_list=None):
-    """Iterator over CSPAD140 images, as taken at LCLS.    
-    ADD BLAH
+    """
+    Python generator to perform an optimized loop on HDF5 datasets. This is a specialized version for the CsPAD 140k as 
+    saved in LCLS HDF5 files (which are contained in a 4D dataset).
+    
+    Parameters
+    ----------
+    images: Numpy-like iterable
+        the array containing the images
+    chunk_size: int
+        size of chunks to be read from the file
+    mask: bool array
+        bool array on indices to be read
+    n_events: int
+        number of events to be read overall
+    tags_list: array
+        unused
+        
+    Returns
+    ----------
+    It yields an element of the images array
+    
     """
 
     # where to put this geometry configurations?
