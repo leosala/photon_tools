@@ -33,7 +33,7 @@ def get_dataset_tags_sacla(main_dataset):
 
 def get_dataset_tags_lcls(main_dataset):
     """
-    Returns an HDF5 dataset pointer and a list of tags for LCLS data files
+    Returns an HDF5 dataset pointer and a list of tags for LCLS data files. Tags are created concatenating seconds and fiducials.
     
     Parameters
     ----------
@@ -60,7 +60,17 @@ def get_dataset_tags_lcls(main_dataset):
     return dataset, tags_list
 
 
-def images_iterator(images, chunk_size=1, mask=None, n_events=-1, tags_list=None):
+def images_iterator(dataset, dataset_format=None, chunk_size=1, mask=None, n_events=-1, tags_list=None):
+    
+    if dataset_format is None:
+        images_iterator_base(dataset, chunk_size, mask, n_events, tags_list)
+    elif dataset_format=="SACLA":
+        images_iterator_sacla(dataset, chunk_size, mask, n_events, tags_list)
+    elif dataset_format=="LCLS_cspad140k":
+        images_iterator_cspad140(dataset, chunk_size, mask, n_events, tags_list)
+
+
+def images_iterator_base(images, chunk_size=1, mask=None, n_events=-1, tags_list=None):
     """
     Python generator to perform an optimized loop on HDF5 datasets. It reads the dataset chunk-wise, optimizing IO
     
@@ -111,8 +121,8 @@ def images_iterator_sacla(dataset, chunk_size=1, mask=None, n_events=-1, tags_li
     
     Parameters
     ----------
-    images: Numpy-like iterable
-        the array containing the images
+    dataset: hdf5 group
+        the HDF5 group containing the 2D detector data, e.g. /run_XXXX/detector_2d_1
     chunk_size: int
         unused
     mask: bool array
