@@ -61,13 +61,40 @@ def get_dataset_tags_lcls(main_dataset):
 
 
 def images_iterator(dataset, dataset_format=None, chunk_size=1, mask=None, n_events=-1, tags_list=None):
+    """
+    Returns a python generator to loop over datasets from different facilities
     
+    Parameters
+    ----------
+    dataset: Numpy-like iterable
+        the array containing the images
+    dataset_format: {None, 'SACLA', 'LCLS_cspad140k'}
+        describes which data we are looping over
+    chunk_size: int
+        size of chunks to be read from the file (not used in SACLA)
+    mask: bool array
+        bool array on indices to be read (not used in SACLA)
+    n_events: int
+        number of events to be read overall
+    tags_list: array
+        list of tags to loop over (only for SACLA dataset format)
+           
+    Returns
+    ----------
+    A python generator
+    
+    Examples
+    ----------
+    In [1]: dataset = np.random.randn(100, 50, 50)
+    In [2]: images = images_iterator(dataset)
+    In [3]: for image in images: print image.shape
+    """
     if dataset_format is None:
-        images_iterator_base(dataset, chunk_size, mask, n_events, tags_list)
+        return images_iterator_base(dataset, chunk_size, mask, n_events, tags_list)
     elif dataset_format=="SACLA":
-        images_iterator_sacla(dataset, chunk_size, mask, n_events, tags_list)
+        return images_iterator_sacla(dataset, chunk_size, mask, n_events, tags_list)
     elif dataset_format=="LCLS_cspad140k":
-        images_iterator_cspad140(dataset, chunk_size, mask, n_events, tags_list)
+        return images_iterator_cspad140(dataset, chunk_size, mask, n_events, tags_list)
 
 
 def images_iterator_base(images, chunk_size=1, mask=None, n_events=-1, tags_list=None):
@@ -87,7 +114,7 @@ def images_iterator_base(images, chunk_size=1, mask=None, n_events=-1, tags_list
     tags_list: array
         unused
            
-    Returns
+    Yields
     ----------
     It yields an element of the images array
     
@@ -132,7 +159,7 @@ def images_iterator_sacla(dataset, chunk_size=1, mask=None, n_events=-1, tags_li
     tags_list: array
         list of tags to be read
            
-    Returns
+    Yields
     ----------
     It yields an element of the images array
     
@@ -169,7 +196,7 @@ def images_iterator_cspad140(images, chunk_size=1, mask=None, n_events=-1, tags_
     tags_list: array
         unused
         
-    Returns
+    Yields
     ----------
     It yields an element of the images array
     
