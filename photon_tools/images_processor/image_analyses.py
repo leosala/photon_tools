@@ -129,7 +129,7 @@ def get_mean_std_results(results, temp):
     return results
 
 
-def get_histo_counts(results, temp, image, bins=None):
+def get_histo_counts(results, temp, image, bins=None, roi=None):
     """Returns the total histogram of counts of images. This function is to be used within an AnalysisProcessor instance. This function can be expensive.
     
     Parameters
@@ -150,6 +150,9 @@ def get_histo_counts(results, temp, image, bins=None):
     """
     if image is None:
         return results, temp
+        
+    if roi is not None:
+        image = image[ roi[0][0]:roi[0][1], roi[1][0]:roi[1][1] ]
 
     if bins is None:
         bins = np.arange(-100, 1000, 5)

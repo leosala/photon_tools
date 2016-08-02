@@ -4,7 +4,7 @@ import sys
 import h5py
 import pydoc
 import image_analyses as ian
-
+import functions_SACLA_may2016 as fsacla
 
 def get_dataset_tags_sacla(main_dataset):
     """
@@ -314,6 +314,7 @@ class ImagesProcessor(object):
         self.available_analyses["get_histo_counts"] = (ian.get_histo_counts, None)
         self.available_analyses["get_mean_std"] = (ian.get_mean_std, ian.get_mean_std_results)
         self.available_analyses["get_projection"] = (ian.get_projection, None)
+        self.available_analyses["roi_bkgRoi"] = (fsacla.roi_bkgRoi, None)
         self.available_preprocess = {}
         self.available_preprocess["set_roi"] = ian.set_roi
         self.available_preprocess["set_thr"] = ian.set_thr
