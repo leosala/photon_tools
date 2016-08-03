@@ -255,3 +255,56 @@ def correct_bad_pixels(image, mask, method="swiss"):
             new_image[x, y] /= 4
     return new_image
 
+
+def roi_bkgRoi(results, temp, image_in, roi, bkg_roi):
+    """
+    return the total intensity (sum of all pixels) in a roi and corresponding
+    background based on a background roi from an input image
+
+    INPUT:
+        - results, temp, image_in: variable from the imageProcessor class
+        - roi, bkg_roi: region of interest and background region of interest
+
+    OUTPUT: write the intensity in roi and its background in the "results" dictionnary
+
+    The function checks for overlap between the roi and bkg_roi, and takes it into account.
+    """
+
+    # check for intesection
+    tempRoi = roi + np.array([[-8, 8], [-7, 7]]) #extended roi for safe background intensity
+    fintersect = (tempRoi[0][0] < bkg_roi[0][1] and bkg_roi[0][0] < tempRoi[0][1] and
+                  tempRoi[1][0] < bkg_roi[1][1] and bkg_roi[1][0] < tempRoi[1][1])
+
+    if fintersect:
+        intersect = [[max(tempRoi[0][0], bkg_roi[0][0]), min(tempRoi[0][1], bkg_roi[0][1])],
+                     [max(tempRoi[1][0], bkg_roi[1][0]), min(tempRoi[1][1], bkg_roi[1][1])]]
+    else:
+        intersect = []
+
+    tempRoi = intersect
+
+    imgRoi = image_in[roi[0][0]:roi[0][1], roi[1][0]:roi[1][1]]
+    imgBkgRoi = image_in[bkg_roi[0][0]:bkg_roi[0][1], bkg_roi[1][0]:bkg_roi[1][1]]
+    imgTempRoi = image_in[tempRoi[0][0]:tempRoi[0][1], tempRoi[1][0]:tempRoi[1][1]]
+
+    sizeRoi = imgRoi.shape[0] * imgRoi.shape[1]
+    sizeBkgRoi = imgBkgRoi.shape[0] * imgBkgRoi.shape[1]
+    sizeTempRoi = imgTempRoi.shape[0] * imgTempRoi.shape[1]
+
+    intensity_roi = sum(sum(imgRoi))
+    intensity_bkgRoi = sum(sum(imgBkgRoi))
+    intensity_tempRoi = sum(sum(imgTempRoi))
+
+    intensity_bkgRoi = (intensity_bkgRoi-intensity_tempRoi) / (sizeBkgRoi-sizeTempRoi) * sizeRoi
+
+    if temp["current_entry"] == 0:
+        results["intensity"] = np.array(intensity_roi)
+        results["bkg"] = np.array(intensity_bkgRoi)
+    else:
+        results["intensity"] = np.append(results["intensity"], intensity_roi)
+        results["bkg"] = np.append(results["bkg"], intensity_bkgRoi)
+
+    temp["current_entry"] += 1
+
+    return results, temp
+
