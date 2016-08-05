@@ -6,7 +6,8 @@ import pydoc
 
 
 def get_projection(results, temp, image_in, axis=0, thr_hi=None, thr_low=None):
-    """Returns a spectra (projection) over an axis of an image. This function is to be used within an AnalysisProcessor instance.
+    """Returns a spectra (projection) over an axis of an image. This function is to be used within an AnalysisProcessor
+    instance.
     
     Parameters
     ----------
@@ -35,9 +36,9 @@ def get_projection(results, temp, image_in, axis=0, thr_hi=None, thr_low=None):
 
     # static type casting, due to overflow possibility...
     if temp["current_entry"] == 0:
-        if temp["image_dtype"].name.find('int') !=-1:
+        if temp["image_dtype"].name.find('int') != -1:
             results["spectra"] = np.empty((results['n_entries'], temp["image_shape"][other_axis]), dtype=np.int64) 
-        elif temp["image_dtype"].name.find('float') !=-1:
+        elif temp["image_dtype"].name.find('float') != -1:
             results["spectra"] = np.empty((results['n_entries'], temp["image_shape"][other_axis]), dtype=np.float64) 
         
     # if there is no image, return NaN
@@ -53,15 +54,16 @@ def get_projection(results, temp, image_in, axis=0, thr_hi=None, thr_low=None):
     
         result = np.nansum(image, axis=axis)
 
-    #if result[result > 1000] != []:
-    #    print temp['current_entry'], result[result > 1000]
+    # if result[result > 1000] != []:
+    # print temp['current_entry'], result[result > 1000]
     results["spectra"][temp['current_entry']] = result
     temp["current_entry"] += 1
     return results, temp
 
-    
+
 def get_mean_std(results, temp, image_in, thr_hi=None, thr_low=None):
-    """Returns the average of images and their standard deviation. This function is to be used within an AnalysisProcessor instance.
+    """Returns the average of images and their standard deviation. This function is to be used within an
+    AnalysisProcessor instance.
     
     Parameters
     ----------
@@ -87,9 +89,9 @@ def get_mean_std(results, temp, image_in, thr_hi=None, thr_low=None):
     image = image_in.copy()
     
     if thr_low is not None:
-        image[ image < thr_low] = 0
+        image[image < thr_low] = 0
     if thr_hi is not None:
-        image[ image > thr_hi] = 0
+        image[image > thr_hi] = 0
     
     if temp["current_entry"] == 0:
         temp["sum"] = np.array(image)
@@ -104,7 +106,8 @@ def get_mean_std(results, temp, image_in, thr_hi=None, thr_low=None):
     
 
 def get_mean_std_results(results, temp):
-    """Function to be applied to results of image_get_std_results. This function is to be used within an AnalysisProcessor instance, and it is called automatically.
+    """Function to be applied to results of image_get_std_results. This function is to be used within an
+    AnalysisProcessor instance, and it is called automatically.
     
     Parameters
     ----------
@@ -116,7 +119,8 @@ def get_mean_std_results(results, temp):
     Returns
     -------
     results: dict
-        Dictionaries containing results and temporary variables, to be used internally by AnalysisProcessor. Result keys are 'images_mean' and 'images_std', which are the average and the standard deviation, respectively.
+        Dictionaries containing results and temporary variables, to be used internally by AnalysisProcessor. Result
+        keys are 'images_mean' and 'images_std', which are the average and the standard deviation, respectively.
     """
     if not temp.has_key("sum"):
         return results        
@@ -130,7 +134,8 @@ def get_mean_std_results(results, temp):
 
 
 def get_histo_counts(results, temp, image, bins=None, roi=None):
-    """Returns the total histogram of counts of images. This function is to be used within an AnalysisProcessor instance. This function can be expensive.
+    """Returns the total histogram of counts of images. This function is to be used within an AnalysisProcessor
+    instance. This function can be expensive.
     
     Parameters
     ----------
@@ -152,7 +157,7 @@ def get_histo_counts(results, temp, image, bins=None, roi=None):
         return results, temp
         
     if roi is not None:
-        image = image[ roi[0][0]:roi[0][1], roi[1][0]:roi[1][1] ]
+        image = image[roi[0][0]:roi[0][1], roi[1][0]:roi[1][1]]
 
     if bins is None:
         bins = np.arange(-100, 1000, 5)
@@ -225,7 +230,7 @@ def subtract_correction(image, sub_image):
     ----------
     image: Numpy array
         the input array image
-    image: Numpy array
+    sub_image: Numpy array
         the image to be subtracted
 
     Returns
@@ -245,7 +250,7 @@ def mask_pixels(image, mask):
 
 def correct_bad_pixels(image, mask, method="swiss"):
     new_image = image.copy()
-    points = np.array(np.where(mask == True))
+    points = np.array(np.where(mask is True))
     if method == "swiss":
         # add check if neigh pixels is hot, too
         for x, y in points.T:
@@ -257,52 +262,63 @@ def correct_bad_pixels(image, mask, method="swiss"):
 
 
 def roi_bkgRoi(results, temp, image_in, roi, bkg_roi):
+    """ Returns the total intensity (sum of all pixels) in a roi and corresponding background based on a background
+    roi from an input image. The function checks for overlap between the roi and bkg_roi, and takes it into account.
+     This function is to be used within an AnalysisProcessor instance.
+
+    Parameters
+    ----------
+    results : dict
+        dictionary containing the results. This is provided by the AnalysisProcessor class
+    temp : dict
+        dictionary containing temporary variables. This is provided by the AnalysisProcessor class
+    image_in : Numpy array
+        the image. This is provided by the AnalysisProcessor class
+    roi: Array
+        the ROI selection, as [[X_lo, X_hi], [Y_lo, Y_hi]]
+    bkg_roi: Array
+        the background ROI selection, as [[X_lo, X_hi], [Y_lo, Y_hi]]
+
+    Returns
+    -------
+    results, temp: dict
+        Dictionaries containing intensity in roi and its background and temporary variables, to be used internally by
+        AnalysisProcessor
     """
-    return the total intensity (sum of all pixels) in a roi and corresponding
-    background based on a background roi from an input image
 
-    INPUT:
-        - results, temp, image_in: variable from the imageProcessor class
-        - roi, bkg_roi: region of interest and background region of interest
-
-    OUTPUT: write the intensity in roi and its background in the "results" dictionnary
-
-    The function checks for overlap between the roi and bkg_roi, and takes it into account.
-    """
-
-    # check for intesection
-    tempRoi = roi + np.array([[-8, 8], [-7, 7]]) #extended roi for safe background intensity
-    fintersect = (tempRoi[0][0] < bkg_roi[0][1] and bkg_roi[0][0] < tempRoi[0][1] and
-                  tempRoi[1][0] < bkg_roi[1][1] and bkg_roi[1][0] < tempRoi[1][1])
+    # check for intersection
+    temp_roi = roi + np.array([[-8, 8], [-7, 7]])  # extended roi for safe background intensity
+    fintersect = (temp_roi[0][0] < bkg_roi[0][1] and bkg_roi[0][0] < temp_roi[0][1] and
+                  temp_roi[1][0] < bkg_roi[1][1] and bkg_roi[1][0] < temp_roi[1][1])
 
     if fintersect:
-        intersect = [[max(tempRoi[0][0], bkg_roi[0][0]), min(tempRoi[0][1], bkg_roi[0][1])],
-                     [max(tempRoi[1][0], bkg_roi[1][0]), min(tempRoi[1][1], bkg_roi[1][1])]]
+        intersect = [[max(temp_roi[0][0], bkg_roi[0][0]), min(temp_roi[0][1], bkg_roi[0][1])],
+                     [max(temp_roi[1][0], bkg_roi[1][0]), min(temp_roi[1][1], bkg_roi[1][1])]]
     else:
         intersect = []
 
-    tempRoi = intersect
+    temp_roi = intersect
 
-    imgRoi = image_in[roi[0][0]:roi[0][1], roi[1][0]:roi[1][1]]
-    imgBkgRoi = image_in[bkg_roi[0][0]:bkg_roi[0][1], bkg_roi[1][0]:bkg_roi[1][1]]
-    imgTempRoi = image_in[tempRoi[0][0]:tempRoi[0][1], tempRoi[1][0]:tempRoi[1][1]]
+    img_roi = image_in[roi[0][0]:roi[0][1], roi[1][0]:roi[1][1]]
+    img_bkg_roi = image_in[bkg_roi[0][0]:bkg_roi[0][1], bkg_roi[1][0]:bkg_roi[1][1]]
+    img_temp_roi = image_in[temp_roi[0][0]:temp_roi[0][1], temp_roi[1][0]:temp_roi[1][1]]
 
-    sizeRoi = imgRoi.shape[0] * imgRoi.shape[1]
-    sizeBkgRoi = imgBkgRoi.shape[0] * imgBkgRoi.shape[1]
-    sizeTempRoi = imgTempRoi.shape[0] * imgTempRoi.shape[1]
+    size_roi = img_roi.shape[0] * img_roi.shape[1]
+    size_bkg_roi = img_bkg_roi.shape[0] * img_bkg_roi.shape[1]
+    size_temp_roi = img_temp_roi.shape[0] * img_temp_roi.shape[1]
 
-    intensity_roi = sum(sum(imgRoi))
-    intensity_bkgRoi = sum(sum(imgBkgRoi))
-    intensity_tempRoi = sum(sum(imgTempRoi))
+    intensity_roi = sum(sum(img_roi))
+    intensity_bkg_roi = sum(sum(img_bkg_roi))
+    intensity_temp_roi = sum(sum(img_temp_roi))
 
-    intensity_bkgRoi = (intensity_bkgRoi-intensity_tempRoi) / (sizeBkgRoi-sizeTempRoi) * sizeRoi
+    intensity_bkg_roi = (intensity_bkg_roi-intensity_temp_roi) / (size_bkg_roi-size_temp_roi) * size_roi
 
     if temp["current_entry"] == 0:
         results["intensity"] = np.array(intensity_roi)
-        results["bkg"] = np.array(intensity_bkgRoi)
+        results["bkg"] = np.array(intensity_bkg_roi)
     else:
         results["intensity"] = np.append(results["intensity"], intensity_roi)
-        results["bkg"] = np.append(results["bkg"], intensity_bkgRoi)
+        results["bkg"] = np.append(results["bkg"], intensity_bkg_roi)
 
     temp["current_entry"] += 1
 
