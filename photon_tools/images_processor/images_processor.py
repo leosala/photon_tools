@@ -33,7 +33,8 @@ def get_dataset_tags_sacla(main_dataset):
 
 def get_dataset_tags_lcls(main_dataset):
     """
-    Returns an HDF5 dataset pointer and a list of tags for LCLS data files. Tags are created concatenating seconds and fiducials.
+    Returns an HDF5 dataset pointer and a list of tags for LCLS data files. Tags are created concatenating seconds and
+    fiducials.
     
     Parameters
     ----------
@@ -42,7 +43,7 @@ def get_dataset_tags_lcls(main_dataset):
            
     Returns
     ----------
-    main_dataset : HDF5 dataset
+    dataset : HDF5 dataset
     tags_list: numpy array
         a numpy array containing the list of tags contained in the dataset
        
@@ -91,9 +92,9 @@ def images_iterator(dataset, dataset_format=None, chunk_size=1, mask=None, n_eve
     """
     if dataset_format is None:
         return images_iterator_base(dataset, chunk_size, mask, n_events, tags_list)
-    elif dataset_format=="SACLA":
+    elif dataset_format == "SACLA":
         return images_iterator_sacla(dataset, chunk_size, mask, n_events, tags_list)
-    elif dataset_format=="LCLS_cspad140k":
+    elif dataset_format == "LCLS_cspad140k":
         return images_iterator_cspad140(dataset, chunk_size, mask, n_events, tags_list)
 
 
@@ -203,8 +204,8 @@ def images_iterator_cspad140(images, chunk_size=1, mask=None, n_events=-1, tags_
     """
 
     # where to put this geometry configurations?
-    pixel_width = 110 # in microns
-    vertical_gap_mm = 2.3 # in mm
+    pixel_width = 110  # in microns
+    vertical_gap_mm = 2.3  # in mm
 
     i = 0
     if n_events == -1:
@@ -233,7 +234,8 @@ def images_iterator_cspad140(images, chunk_size=1, mask=None, n_events=-1, tags_
     
     
 class Analysis(object):
-    """Simple container for the analysis functions to be loaded into AnalysisProcessor. At the moment, it is only used internally inside AnalysisProcessor
+    """Simple container for the analysis functions to be loaded into AnalysisProcessor. At the moment, it is only used
+    internally inside AnalysisProcessor
     """
     def __init__(self, analysis_function, arguments={}, post_analysis_function=None, name=None):
         """
@@ -245,6 +247,8 @@ class Analysis(object):
             arguments to analysis_function
         post_analysis_function: callable function
             function to be called only once after the analysis loop
+        name: str
+            custom function name
         """
 
         self.function = analysis_function
@@ -286,18 +290,18 @@ class ImagesProcessor(object):
     In order to apply this function to all images, you need to:
     
     # create an AnalysisOnImages object
-    an = ImagesProcessor()
+    ip = ImagesProcessor()
 
     # load a dataset from a SACLA data file
     fname = "/home/sala/Work/Data/Sacla/ZnO/257325.h5"
     dataset_name = "detector_2d_1"
-    an.set_sacla_dataset(hf, dataset_name)
+    ip.set_sacla_dataset(hf, dataset_name)
 
     # register the function:    
-    an.add_analysis(get_spectra, args={'axis': 1})
+    ip.add_analysis(get_spectra, args={'axis': 1})
 
     # run the loop
-    results = an.analyze_images(fname, n=1000)
+    results = ip.analyze_images(fname, n=1000)
 
     """
 
@@ -314,6 +318,7 @@ class ImagesProcessor(object):
         self.available_analyses["get_histo_counts"] = (ian.get_histo_counts, None)
         self.available_analyses["get_mean_std"] = (ian.get_mean_std, ian.get_mean_std_results)
         self.available_analyses["get_projection"] = (ian.get_projection, None)
+        self.available_analyses["roi_bkgRoi"] = (ian.roi_bkgRoi, None)
         self.available_preprocess = {}
         self.available_preprocess["set_roi"] = ian.set_roi
         self.available_preprocess["set_thr"] = ian.set_thr
@@ -332,7 +337,6 @@ class ImagesProcessor(object):
             self.get_dataset_tags = get_dataset_tags_lcls
         else:
             print "[ERROR] Supported facilities are LCLS and SACLA"
-            return -1
 
     def __call__(self, dataset_file, n=-1, tags=None):
         return self.analyze_images(dataset_file, n=n, tags=tags)
@@ -351,7 +355,6 @@ class ImagesProcessor(object):
         else:
             print sys.exc_info()
             raise RuntimeError("Images iterator function %s does not exist!" % func_name)
-
 
     def add_preprocess(self, f, label="", args={}):
         """
@@ -404,7 +407,8 @@ class ImagesProcessor(object):
         Parameters
         ----------
         f: callable function
-            analysis function to be loaded. Must take at least results (dict), temp (dict) and image (numpy array) as input, and return just results and temp. See main class help.
+            analysis function to be loaded. Must take at least results (dict), temp (dict) and image (numpy array) as
+            input, and return just results and temp. See main class help.
         result_f: callable function
             function to be applied to the results, at the end of the loop on images.
         args: dict
@@ -473,7 +477,8 @@ class ImagesProcessor(object):
         self.results = {}
         self.temp = {}
         if remove_preprocess:
-            print "[INFO] Setting a new dataset, removing stored preprocess functions. To overcome this, use remove_preprocess=False"
+            print "[INFO] Setting a new dataset, removing stored preprocess functions. To overcome this, use " \
+                  "remove_preprocess=False"
             self.remove_preprocess()
         
     def analyze_images(self, fname, n=-1, tags=None, chunk_size=1000):
@@ -487,6 +492,8 @@ class ImagesProcessor(object):
             Number of events to be analyzed. If -1, then all events will be analyzed.
         tags : int list
             List of tags to be analyzed.
+        chunk_size : int
+            Size of chunks to be read from the file (to be passed to image iterator)
             
         Returns
         -------
@@ -600,5 +607,3 @@ class ImagesProcessor(object):
                 print pydoc.plain(pydoc.render_doc(self.available_analyses[label][0]))
             else:
                 print "Function %s does not exist" % label
-                
-        
